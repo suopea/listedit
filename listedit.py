@@ -1,4 +1,5 @@
 import curses
+import string
 import os
 import sys
 from copy import deepcopy
@@ -53,8 +54,10 @@ def get_query(w, things, query):
         print_results(w, 4, things, query)
     elif key == "\n" and query == "":
         pass
-    else:
+    elif key in string.printable:
         query += key
+    else:
+        pass
     return query
 
 
