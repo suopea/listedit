@@ -10,10 +10,10 @@ min_size = 6
 def main(w):
     things = []
     if len(sys.argv) > 2:
-        print("too many arguments")
+        print("give one or none files as arguments")
         quit()
     if len(sys.argv) == 1:
-        filename = ask_for_filename()
+        filename = ask_for_filename(w)
     else:
         filename = sys.argv[1]
     with open(filename) as file:
@@ -55,10 +55,38 @@ def get_query(w, things, query):
     return query
 
 
-def ask_for_filename():
+def ask_for_filename(w):
     files = [f for f in os.listdir('.')]
-
-    return "testfile"
+    query = ""
+    while True:
+        if not query:
+            w.addstr(2, pad_left,
+                     "give a filename to open or create, or quit to quit")
+        query = get_query(w, files, query)
+        if query and query[-1] == "\n":
+            query = query[:-1]
+            if query in "quit":
+                quit()
+            elif query in files:
+                if os.path.isfile(query):
+                    return query
+            else:
+                with open(query, "w"):
+                    pass
+                return query
+        if query in files:
+            if os.path.isfile(query):
+                w.addstr(2, pad_left + len(query) + 1,
+                         " OPEN by pressing enter")
+            else:
+                w.addstr(2, pad_left + len(query) + 1,
+                         " is a directory")
+        elif query in "quit":
+            w.addstr(2, pad_left + len(query) + 1,
+                     " QUIT by pressing enter")
+        else:
+            w.addstr(2, pad_left + len(query) + 1,
+                     " CREATE by pressing enter")
 
 
 def apply_query(w, query, things, filename):
