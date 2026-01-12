@@ -139,7 +139,6 @@ def apply_query(w, query, things, things_at_start, filename):
         things.remove(query)
         w.clear()
         tooltip(w, query, "removed. Press enter to add back")
-        print_results(w, query_y, things, query)
         return query
     else:
         things.append(query)
