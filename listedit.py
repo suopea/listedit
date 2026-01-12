@@ -54,10 +54,21 @@ def get_query(w, things, query):
         print_results(w, 4, things, query)
     elif key == "\n" and query == "":
         pass
+    elif key == "\t":
+        query = tab_complete(things, query)
+    elif key == "KEY_DOWN" or key == "KEY_UP":
+        query = ""
     elif key in string.printable:
         query += key
     else:
         pass
+    return query
+
+
+def tab_complete(things, query):
+    for thing in things[::-1]:
+        if query in thing:
+            return thing
     return query
 
 
