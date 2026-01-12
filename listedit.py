@@ -1,6 +1,7 @@
 import curses
 import os
 import sys
+from copy import deepcopy
 
 pad_left = 4
 pad_bottom = 7
@@ -8,7 +9,6 @@ min_size = 6
 
 
 def main(w):
-    things = []
     if len(sys.argv) > 2:
         print("give one or none files as arguments")
         quit()
@@ -16,20 +16,23 @@ def main(w):
         filename = ask_for_filename(w)
     else:
         filename = sys.argv[1]
+    things = []
     with open(filename) as file:
         for line in file.readlines():
             if line != "\n":
                 things.append(line[:-1])
+    things_at_start = deepcopy(things)
     query = ""
     while True:
         query = get_query(w, things, query)
-        query = if_enter_apply_query(w, query, things, filename)
+        query = if_enter_apply_query(
+            w, query, things, things_at_start, filename)
 
 
-def if_enter_apply_query(w, query, things, filename):
+def if_enter_apply_query(w, query, things, things_at_start, filename):
     if query and query[-1] == "\n" and query != "\n":
         query = query[:-1]
-        query = apply_query(w, query, things, filename)
+        query = apply_query(w, query, things, things_at_start, filename)
     return query
 
 
@@ -89,9 +92,11 @@ def ask_for_filename(w):
                      " CREATE by pressing enter")
 
 
-def apply_query(w, query, things, filename):
+def apply_query(w, query, things, things_at_start, filename):
     if query in "quit":
-        save_and_quit(w, things, filename)
+        save_and_quit(w, things, things_at_start, filename)
+        w.clear()
+        return ""
     elif query in "undo":
         query = things.pop()
         w.addstr(2, pad_left + len(query) + 1,
@@ -114,16 +119,18 @@ def apply_query(w, query, things, filename):
         return ""
 
 
-def save_and_quit(w, things, filename):
+def save_and_quit(w, things, things_at_start, filename):
     key = "key"
-    while key not in "yn":
+    while key not in "ync":
         w.clear()
-        w.addstr(2, pad_left, f"save to {filename}, y/n?")
+        w.addstr(2, pad_left, f"save to {filename}, y/n? (or c to go back)")
         key = w.getkey()
     if key == "y":
         write_out(filename, things)
         w.clear()
         w.addstr(2, pad_left, "saved! press any key...")
+    elif key == "c":
+        return
     else:
         w.clear()
         w.addstr(2, pad_left, "not saved. press any key...")
