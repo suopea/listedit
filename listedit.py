@@ -7,6 +7,8 @@ from copy import deepcopy
 pad_left = 4
 pad_bottom = 7
 min_size = 6
+query_y = 2
+results_y = 4
 
 
 def main(w):
@@ -26,6 +28,8 @@ def main(w):
     query = ""
     while True:
         query = get_query(w, things, query)
+        if query in things:
+            w.addstr()
         query = if_enter_apply_query(
             w, query, things, things_at_start, filename)
 
@@ -38,8 +42,6 @@ def if_enter_apply_query(w, query, things, things_at_start, filename):
 
 
 def get_query(w, things, query):
-    query_y = 2
-    results_y = 4
     while height(w) < min_size or width(w) < min_size:
         w.clear()
         w.getkey()
@@ -51,7 +53,7 @@ def get_query(w, things, query):
         query = query[:-1]
     elif key == "KEY_RESIZE":
         w.clear()
-        print_results(w, 4, things, query)
+        print_results(w, results_y, things, query)
     elif key == "\n" and query == "":
         pass
     elif key == "\t":
@@ -77,8 +79,7 @@ def ask_for_filename(w):
     query = ""
     while True:
         if not query:
-            w.addstr(2, pad_left,
-                     "give a filename to open or create, or quit to quit")
+            tooltip(w, query, "give a filename to open or create")
         query = get_query(w, files, query)
         if query and query[-1] == "\n":
             query = query[:-1]
@@ -93,17 +94,17 @@ def ask_for_filename(w):
                 return query
         if query in files:
             if os.path.isfile(query):
-                w.addstr(2, pad_left + len(query) + 1,
-                         " OPEN by pressing enter")
+                tooltip(w, query, "OPEN by pressing enter")
             else:
-                w.addstr(2, pad_left + len(query) + 1,
-                         " is a directory")
+                tooltip(w, query, "is a directory")
         elif query in "quit":
-            w.addstr(2, pad_left + len(query) + 1,
-                     " QUIT by pressing enter")
+            tooltip(w, query, "QUIT by pressing enter")
         else:
-            w.addstr(2, pad_left + len(query) + 1,
-                     " CREATE by pressing enter")
+            tooltip(w, query, "CREATE by pressing enter")
+
+
+def tooltip(w, query, message):
+    w.addstr(query_y, pad_left + len(query) + 2, message)
 
 
 def apply_query(w, query, things, things_at_start, filename):
@@ -113,8 +114,7 @@ def apply_query(w, query, things, things_at_start, filename):
         return ""
     elif query in "undo":
         query = things.pop()
-        w.addstr(2, pad_left + len(query) + 1,
-                 "deleted. Press enter to add back")
+        tooltip(w, query, "deleted. Press enter to add back")
         return query
     elif query in things:
         key = "key"

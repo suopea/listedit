@@ -2,3 +2,4 @@ on startup if there are no arguments ask for filename
 when asking to save show the changes
 when asking to save ability to cancel closing
 add ability to delete item
+quitting tooltip on main view
