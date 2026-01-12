@@ -135,9 +135,11 @@ def apply_query(w, query, things, things_at_start, filename):
 
 def save_and_quit(w, things, things_at_start, filename):
     key = "key"
+    curses.curs_set(0)
     while key not in "ync":
         w.clear()
         w.addstr(2, pad_left, f"save to {filename}, y/n? (or c to go back)")
+        print_changes(w, things, things_at_start, 4)
         key = w.getkey()
     if key == "y":
         write_out(filename, things)
@@ -148,8 +150,47 @@ def save_and_quit(w, things, things_at_start, filename):
     else:
         w.clear()
         w.addstr(2, pad_left, "not saved. press any key...")
-    key = w.getkey()
+    w.getkey()
     quit()
+
+
+def print_changes(w, things, things_at_start, line):
+    if two_small_to_draw(w):
+        return
+    added = []
+    removed = []
+    for thing in things[::-1]:
+        if thing not in things_at_start:
+            added.append(thing)
+    for thing in things_at_start[::-1]:
+        if thing not in things:
+            removed.append(thing)
+    if not added and not removed:
+        w.addstr(line, pad_left, "no changes made")
+        return
+    if height(w) - line < 4:
+        w.addstr(line + 1, pad_left, "...")
+        return
+    if added:
+        w.addstr(line, pad_left, "added:")
+        line += 2
+    for thing in added:
+        w.addstr(line, pad_left, thing)
+        line += 1
+    if height(w) - line < 4:
+        w.addstr(line + 1, pad_left, "...")
+        return
+    line += 1
+    if removed:
+        w.addstr(line, pad_left, "removed:")
+        line += 2
+    for thing in removed:
+        w.addstr(line, pad_left, thing)
+        line += 1
+
+
+def two_small_to_draw(w):
+    return width(w) < 10 or height(w) < 6
 
 
 def write_out(filename, things):
