@@ -22,16 +22,28 @@ def main(w):
     things = []
     with open(filename) as file:
         for line in file.readlines():
-            if line != "\n":
+            if not just_whitespace(line):
                 things.append(line[:-1])
     things_at_start = deepcopy(things)
     query = ""
     while True:
         query = get_query(w, things, query)
-        if query in things:
-            w.addstr()
+        if just_whitespace(query):
+            pass
+        elif query in things:
+            tooltip(w, query, "DELETE from list")
+        elif completes_to(query, "quit"):
+            tooltip(w, query, "QUIT (and save if you want)")
+        elif completes_to(query, "undo"):
+            tooltip(w, query, f"REMOVE or edit {things[-1].upper()}")
+        elif query:
+            tooltip(w, query, "ADD to list")
         query = if_enter_apply_query(
             w, query, things, things_at_start, filename)
+
+
+def completes_to(a, b):
+    return a == b[:len(a)]
 
 
 def if_enter_apply_query(w, query, things, things_at_start, filename):
@@ -39,6 +51,13 @@ def if_enter_apply_query(w, query, things, things_at_start, filename):
         query = query[:-1]
         query = apply_query(w, query, things, things_at_start, filename)
     return query
+
+
+def just_whitespace(thing):
+    for c in thing:
+        if c not in string.whitespace:
+            return False
+    return True
 
 
 def get_query(w, things, query):
@@ -83,7 +102,7 @@ def ask_for_filename(w):
         query = get_query(w, files, query)
         if query and query[-1] == "\n":
             query = query[:-1]
-            if query in "quit":
+            if completes_to(query, "quit"):
                 quit()
             elif query in files:
                 if os.path.isfile(query):
@@ -94,13 +113,13 @@ def ask_for_filename(w):
                 return query
         if query in files:
             if os.path.isfile(query):
-                tooltip(w, query, "OPEN by pressing enter")
+                tooltip(w, query, "OPEN file")
             else:
                 tooltip(w, query, "is a directory")
-        elif query in "quit":
-            tooltip(w, query, "QUIT by pressing enter")
+        elif completes_to(query, "quit"):
+            tooltip(w, query, "QUIT")
         else:
-            tooltip(w, query, "CREATE by pressing enter")
+            tooltip(w, query, "CREATE file")
 
 
 def tooltip(w, query, message):
@@ -108,27 +127,24 @@ def tooltip(w, query, message):
 
 
 def apply_query(w, query, things, things_at_start, filename):
-    if query in "quit":
+    if completes_to(query, "quit"):
         save_and_quit(w, things, things_at_start, filename)
         w.clear()
         return ""
-    elif query in "undo":
+    elif completes_to(query, "undo"):
         query = things.pop()
         tooltip(w, query, "deleted. Press enter to add back")
         return query
     elif query in things:
-        key = "key"
-        while key not in "yn":
-            w.clear()
-            w.addstr(2, pad_left, f"delete {query}, y/n?")
-            key = w.getkey()
-        if key == "y":
-            things.remove(query)
-            w.clear()
-            w.addstr(2, pad_left, f"{query} removed. Press enter to add back")
+        things.remove(query)
+        w.clear()
+        tooltip(w, query, "removed. Press enter to add back")
+        print_results(w, query_y, things, query)
+        return query
     else:
         things.append(query)
         w.clear()
+        tooltip(w, query, "added. Say 'undo' to undo")
         w.addstr(2, pad_left, f"{query} added. Enter 'undo' to undo")
         return ""
 
@@ -166,8 +182,10 @@ def print_changes(w, things, things_at_start, line):
         if thing not in things:
             removed.append(thing)
     if not added and not removed:
-        w.addstr(line, pad_left, "no changes made")
-        return
+        w.clear()
+        w.addstr(query_y, pad_left, "no changes made, press any key to quit...")
+        w.getkey()
+        quit()
     if height(w) - line < 4:
         w.addstr(line + 1, pad_left, "...")
         return
