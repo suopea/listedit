@@ -1,4 +1,5 @@
 import curses
+import os
 import sys
 
 pad_left = 4
@@ -22,9 +23,14 @@ def main(w):
     query = ""
     while True:
         query = get_query(w, things, query)
-        if query and query[-1] == "\n" and query != "\n":
-            query = query[:-1]
-            query = apply_query(w, query, things, filename)
+        query = if_enter_apply_query(w, query, things, filename)
+
+
+def if_enter_apply_query(w, query, things, filename):
+    if query and query[-1] == "\n" and query != "\n":
+        query = query[:-1]
+        query = apply_query(w, query, things, filename)
+    return query
 
 
 def get_query(w, things, query):
@@ -50,6 +56,8 @@ def get_query(w, things, query):
 
 
 def ask_for_filename():
+    files = [f for f in os.listdir('.')]
+
     return "testfile"
 
 
