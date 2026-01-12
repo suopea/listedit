@@ -22,28 +22,31 @@ def main(w):
     query = ""
     while True:
         query = get_query(w, things, query)
-        query = apply_query(w, query, things, filename)
+        if query and query[-1] == "\n" and query != "\n":
+            query = query[:-1]
+            query = apply_query(w, query, things, filename)
 
 
 def get_query(w, things, query):
-    while True:
-        while height(w) < min_size or width(w) < min_size:
-            w.clear()
-            w.getkey()
-        print_results(w, 4, things, query)
-        w.addstr(2, pad_left, query)
-        key = w.getkey()
+    query_y = 2
+    results_y = 4
+    while height(w) < min_size or width(w) < min_size:
         w.clear()
-        if key == "KEY_BACKSPACE":
-            query = query[:-1]
-        elif key == "\n":
-            if query != "":
-                return query
-        elif key == "KEY_RESIZE":
-            w.clear()
-            print_results(w, 4, things, query)
-        else:
-            query += key
+        w.getkey()
+    print_results(w, results_y, things, query)
+    w.addstr(query_y, pad_left, query)
+    key = w.getkey()
+    w.clear()
+    if key == "KEY_BACKSPACE":
+        query = query[:-1]
+    elif key == "KEY_RESIZE":
+        w.clear()
+        print_results(w, 4, things, query)
+    elif key == "\n" and query == "":
+        pass
+    else:
+        query += key
+    return query
 
 
 def ask_for_filename():
